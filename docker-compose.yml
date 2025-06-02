@@ -1,0 +1,48 @@
+version: '3.9'
+services:
+  privategpt:
+    build: ./privategpt
+    container_name: privategpt
+    volumes:
+      - ./privategpt_data:/app/data
+      - ./notes_ingest:/app/notes
+      - ./archivebox_data:/app/archive
+      - ./email_exports:/app/email
+      - ./obsidian:/app/obsidian
+      - ./financial_data:/app/finances
+      - ./calendar:/app/calendar
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENAI_API_KEY=your-key-if-needed
+      - MODEL_PATH=/models/your-model.bin
+    restart: unless-stopped
+    depends_on:
+      - chromadb
+
+  chromadb:
+    image: chromadb/chroma
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_data:/chroma/.chroma
+    restart: unless-stopped
+
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: syncthing
+    ports:
+      - "8384:8384"
+      - "22000:22000"
+      - "21027:21027/udp"
+    volumes:
+      - ./syncthing_config:/var/syncthing/config
+      - ./syncthing_data:/var/syncthing/data
+      - ./notes_ingest:/var/syncthing/data/notes_ingest
+      - ./archivebox_data:/var/syncthing/data/archivebox
+      - ./email_exports:/var/syncthing/data/email_exports
+      - ./obsidian:/var/syncthing/data/obsidian
+      - ./financial_data:/var/syncthing/data/financial_data
+      - ./calendar:/var/syncthing/data/calendar
+    restart: unless-stopped
